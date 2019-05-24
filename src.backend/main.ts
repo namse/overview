@@ -1,17 +1,21 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, screen } from "electron";
 import * as path from "path";
 
 let mainWindow: Electron.BrowserWindow;
 
 function createWindow() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    height: 600,
-    width: 800,
-    webPreferences: {
-      nodeIntegration: true,
-    },
+    height,
+    width,
+    alwaysOnTop: true,
+    frame: false,
+    transparent: true,
   });
+
+  mainWindow.setIgnoreMouseEvents(true);
 
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, "../src.frontend/index.html"));
