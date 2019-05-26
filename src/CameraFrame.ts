@@ -1,31 +1,55 @@
+export type CameraFrameOption = {
+  left: string,
+  top: string,
+  width: string,
+  height: string,
+  cropInfo?: {
+    top: number,
+    right: number,
+    bottom: number,
+    left: number,
+  },
+  deviceId: string,
+  isHorizontallyFlipped: boolean,
+  isMuted: boolean,
+}
+
 export default class CameraFrame {
-  private readonly videoElement: HTMLVideoElement;
+  private readonly videoElement: HTMLVideoElement = document.createElement('video');;
+  private readonly containerElement: HTMLDivElement = document.createElement('div');
 
   constructor(
-    private left: string,
-    private top: string,
-    private width: string,
-    private height: string,
-    private isMuted: boolean = true,
+    private option: CameraFrameOption,
   ) {
-    this.videoElement = document.createElement('video');
+    this.containerElement.style.position = 'absolute';
+    this.containerElement.style.left = option.left;
+    this.containerElement.style.top = option.top;
+    this.containerElement.style.width = option.width;
+    this.containerElement.style.height = option.height;
+    this.containerElement.style.overflow = 'hidden';
+
+    this.videoElement.style.transform = option.isHorizontallyFlipped ? 'scaleX(-1)' : '';
 
     this.videoElement.style.position = 'absolute';
-    this.videoElement.style.left = left;
-    this.videoElement.style.top = top;
-    this.videoElement.style.width = width;
-    this.videoElement.style.height = height;
+    if (option.cropInfo) {
+      this.videoElement.style.left = `-${option.cropInfo.left}px`;
+      this.videoElement.style.top = `-${option.cropInfo.top}px`;
+    }
 
     this.videoElement.autoplay = true;
-    this.videoElement.muted = isMuted
+    this.videoElement.muted = option.isMuted;
   }
 
-  public async load(): Promise<void> {
-    const stream = await navigator.mediaDevices.getUserMedia({video: true});
-    this.videoElement.srcObject = stream;;
-  }
+  public async initialize(): Promise<void> {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        deviceId: this.option.deviceId,
+      },
+    });
 
-  public get element(): HTMLElement {
-    return this.videoElement;
+    this.videoElement.srcObject = stream;
+
+    this.containerElement.appendChild(this.videoElement);
+    document.body.appendChild(this.containerElement);
   }
 }
