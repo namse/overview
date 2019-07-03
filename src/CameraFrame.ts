@@ -1,3 +1,5 @@
+import Frame from "./Frame/Frame";
+
 export type CameraFrameOption = {
   left: string,
   top: string,
@@ -14,13 +16,14 @@ export type CameraFrameOption = {
   isMuted: boolean,
 }
 
-export default class CameraFrame {
+export default class CameraFrame extends Frame {
   private readonly videoElement: HTMLVideoElement = document.createElement('video');;
   private readonly containerElement: HTMLDivElement = document.createElement('div');
 
   constructor(
     private option: CameraFrameOption,
   ) {
+    super();
     this.containerElement.style.position = 'absolute';
     this.containerElement.style.left = option.left;
     this.containerElement.style.top = option.top;
@@ -29,6 +32,8 @@ export default class CameraFrame {
     this.containerElement.style.overflow = 'hidden';
 
     this.videoElement.style.transform = option.isHorizontallyFlipped ? 'scaleX(-1)' : '';
+    // this.videoElement.style.width = option.width;
+    // this.videoElement.style.height = option.height;
 
     this.videoElement.style.position = 'absolute';
     if (option.cropInfo) {
@@ -41,9 +46,12 @@ export default class CameraFrame {
   }
 
   public async initialize(): Promise<void> {
+    super.initialize();
+
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         deviceId: this.option.deviceId,
+        // width: 1920,
       },
     });
 

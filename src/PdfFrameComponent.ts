@@ -1,9 +1,15 @@
 import { WebviewTag } from "electron";
-import Frame from "./Frame/Frame";
+import FrameComponent from "./Frame/FrameComponent";
+import { remote } from 'electron';
 
-export default class WebFrame extends Frame {
+const currentElectronWindow = remote.getCurrentWindow();
+
+export default class PdfFrameComponent extends FrameComponent {
   readonly iframeElement: WebviewTag = document.createElement('webview');
-  readonly containerElement: HTMLDivElement = document.createElement('div');
+
+  public getElement(): HTMLElement {
+    return this.iframeElement;
+  }
 
   constructor(
     private left: string,
@@ -16,8 +22,6 @@ export default class WebFrame extends Frame {
   }
 
   public async initialize(): Promise<void> {
-    super.initialize();
-
     this.iframeElement.style.position = 'absolute';
     this.iframeElement.style.left = this.left;
     this.iframeElement.style.top = this.top;
@@ -25,7 +29,6 @@ export default class WebFrame extends Frame {
     this.iframeElement.style.height = this.height;
 
     this.iframeElement.src = this.url;
-
-    document.body.appendChild(this.iframeElement);
+    this.iframeElement.plugins = 'true';
   }
 }

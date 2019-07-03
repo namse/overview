@@ -3,19 +3,21 @@ import * as path from "path";
 
 let mainWindow: Electron.BrowserWindow;
 
-function createWindow() {
+function initializeWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
     height,
     width,
-    alwaysOnTop: true,
+    // alwaysOnTop: true,
     frame: false,
     transparent: true,
+    webPreferences: {
+      plugins: true,
+      nodeIntegration: true,
+    },
   });
-
-  mainWindow.setIgnoreMouseEvents(true);
 
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, "../src.frontend/index.html"));
@@ -30,12 +32,13 @@ function createWindow() {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
+
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", createWindow);
+app.on("ready", initializeWindow);
 
 // Quit when all windows are closed.
 app.on("window-all-closed", () => {
@@ -50,7 +53,7 @@ app.on("activate", () => {
   // On OS X it"s common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    createWindow();
+    initializeWindow();
   }
 });
 
