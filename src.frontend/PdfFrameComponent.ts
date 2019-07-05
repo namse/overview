@@ -1,11 +1,10 @@
-import { WebviewTag } from "electron";
 import FrameComponent from "./Frame/FrameComponent";
 import { remote } from 'electron';
 
 const currentElectronWindow = remote.getCurrentWindow();
 
 export default class PdfFrameComponent extends FrameComponent {
-  readonly iframeElement: WebviewTag = document.createElement('webview');
+  readonly iframeElement: HTMLIFrameElement = document.createElement('iframe');
 
   public getElement(): HTMLElement {
     return this.iframeElement;
@@ -28,7 +27,6 @@ export default class PdfFrameComponent extends FrameComponent {
     this.iframeElement.style.width = this.width;
     this.iframeElement.style.height = this.height;
 
-    this.iframeElement.src = this.url;
-    this.iframeElement.plugins = 'true';
+    this.iframeElement.src = 'https://mozilla.github.io/pdf.js/web/viewer.html?file=https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
   }
 }
