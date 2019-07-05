@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "A minimal Electron application written with Typescript",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "tsc && node buildScripts/moveIndexHtml.js",
+    "watch": "concurrently --kill-others \"tsc -w\" \"node buildScripts/watchIndexHtml.js\"",
     "lint": "tslint -c tslint.json -p tsconfig.json",
-    "start": "npm run build && electron ./dist/main.js"
+    "start": "npm run build && electron ./dist/src.backend/main.js"
   },
   "repository": "https://github.com/electron/electron-quick-start-typescript",
   "keywords": [
@@ -20,8 +20,12 @@
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^2.0.2",
-    "tslint": "^5.10.0",
-    "typescript": "^2.8.3"
+    "concurrently": "^4.1.1",
+    "parcel-bundler": "^1.12.3",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.2"
+  },
+  "dependencies": {
+    "electron": "^5.0.6"
   }
 }

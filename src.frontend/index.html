@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+
+  <script>
+    window.exports = {}; // electron doesn't provide exports as default, but tsc generate code `exports.__esModule = true;`.
+  </script>
+
+  <script src="./renderer.js"></script>
+</html>
