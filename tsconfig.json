@@ -7,10 +7,10 @@
     "baseUrl": ".",
     "paths": {
       "*": ["node_modules/*"],
+      "@src/*": ["src/*"],
     },
   },
   "include": [
-    "src.backend/**/*",
-    "src.frontend/**/*",
+    "src/**/*",
   ]
 }

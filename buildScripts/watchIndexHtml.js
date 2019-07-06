@@ -5,7 +5,7 @@ const moveIndexHtml = require('./moveIndexHtml');
 let isMoveRequested = false;
 
 function watchIndexHtml() {
-    const filePath = path.join(__dirname, '../src.frontend/index.html');
+    const filePath = path.join(__dirname, '../src/frontend/index.html');
 
     fs.watch(filePath, (event) => {
         if (isMoveRequested) {

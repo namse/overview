@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const distPath = path.join(__dirname, '../dist');
-const srcFrontendPath = path.join(__dirname, '../dist/src.frontend');
+const srcFrontendPath = path.join(__dirname, '../dist/frontend');
 
 if (!fs.existsSync(distPath)) {
     fs.mkdirSync(distPath);
@@ -13,8 +13,8 @@ if (!fs.existsSync(srcFrontendPath)) {
 }
 
 function moveIndexHtml() {
-    const filePath = path.join(__dirname, '../src.frontend/index.html');
-    const destination = path.join(__dirname, '../dist/src.frontend/index.html');
+    const filePath = path.join(__dirname, '../src/frontend/index.html');
+    const destination = path.join(__dirname, '../dist/frontend/index.html');
 
     try {
         fs.copyFileSync(filePath, destination);
