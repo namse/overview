@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Overlay system for stream, or general case",
   "scripts": {
-    "build": "tsc && node buildScripts/moveIndexHtml.js",
-    "watch": "concurrently --kill-others \"tsc -w\" \"node buildScripts/watchIndexHtml.js\"",
+    "build": "tsc && node buildScripts/copyAllResources.js",
+    "watch": "concurrently --kill-others \"tsc -w\" \"node buildScripts/watchResources.js\"",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "start": "npm run build && electron ./dist/backend/main.js"
   },
@@ -23,7 +23,9 @@
   "author": "GitHub",
   "devDependencies": {
     "@types/uuid": "^3.4.5",
+    "@types/yaml": "^1.0.2",
     "concurrently": "^4.1.1",
+    "fs-extra": "^8.1.0",
     "parcel-bundler": "^1.12.3",
     "tslint": "^5.18.0",
     "typescript": "^3.5.2"
@@ -31,6 +33,7 @@
   "dependencies": {
     "electron": "^5.0.6",
     "module-alias": "^2.2.0",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "yaml": "^1.6.0"
   }
 }

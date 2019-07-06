@@ -1,0 +1,12 @@
+frames:
+  - id: 1
+    type: Pdf
+    src: https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf
+scenes:
+  - sceneName: main
+    framePositionAndSizes:
+    - id: 1
+      x: 0
+      y: 0
+      width: 960
+      height: 540

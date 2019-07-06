@@ -1,5 +1,5 @@
 export enum FrameType {
-  Pdf,
+  Pdf = 'Pdf',
 }
 
 export abstract class FrameOptions {

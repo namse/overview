@@ -1,0 +1,40 @@
+const fs = require('fs');
+const path = require('path');
+const copyResource = require('./copyResource');
+const copyAllResources = require('./copyAllResources');
+
+const fileMoveRequestingMap = {};
+
+function requestMoveFile(filename) {
+  if (fileMoveRequestingMap[filename]) {
+    return;
+  }
+
+  fileMoveRequestingMap[filename] = true;
+
+  setTimeout(async () => { // timeout for vscode save operation
+    await copyResource(filename);
+    fileMoveRequestingMap[filename] = false;
+  }, 10);
+}
+
+function watchResources() {
+  const filePath = path.join(__dirname, '../src');
+
+  fs.watch(filePath, (event, filename) => {
+    if (filename.endsWith('.ts')) {
+      return;
+    }
+
+    requestMoveFile(filename);
+  });
+}
+
+module.exports = watchResources();
+
+if (require.main === module) {
+  (async () => {
+    await copyAllResources();
+    watchResources();
+  })();
+}
