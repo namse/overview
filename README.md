@@ -1,6 +1,6 @@
 # Overview
 
-Overlay System using Electorn.js
+Overlay System using Electron.js
 
 # Architecture
 
