@@ -22,6 +22,7 @@
   },
   "author": "GitHub",
   "devDependencies": {
+    "@types/node-fetch": "^2.3.7",
     "@types/uuid": "^3.4.5",
     "@types/yaml": "^1.0.2",
     "concurrently": "^4.1.1",
@@ -33,6 +34,7 @@
   "dependencies": {
     "electron": "^5.0.6",
     "module-alias": "^2.2.0",
+    "node-fetch": "^2.6.0",
     "uuid": "^3.3.2",
     "yaml": "^1.6.0"
   }

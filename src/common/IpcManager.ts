@@ -26,7 +26,7 @@ export default class IpcManager {
     this.ipcConnector.send(channel, ...args);
   }
 
-  public waitUntilMessage(channel: string): Promise<any> {
+  public waitUntilMessage(channel: string): Promise<any[]> {
     console.log(`waiting Message : ${channel}`);
     return new Promise((resolve) => {
       if (!this.ipcMessageListenersMap[channel]) {

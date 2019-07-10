@@ -38,8 +38,10 @@ ipcManager.addIpcMessageListener('frameOptions', async (frameOptions: FrameOptio
       const pdfFrame = new Frame(pdfFrameComponent);
 
       await pdfFrame.initialize();
-    }
+    } break;
   }
 });
 
 ipcManager.send('onOpenWindow');
+
+

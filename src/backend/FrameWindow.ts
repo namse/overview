@@ -3,10 +3,11 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import IpcManager, { OnMessage } from '@src/common/IpcManager';
 import { FrameOptions } from '@src/common/FrameOptions';
+import { IWindow } from './IWindow';
 
-export default class FrameWindow {
-  readonly browserWindow: BrowserWindow;
-  readonly id: string = uuid();
+export default class FrameWindow implements IWindow {
+  public readonly browserWindow: BrowserWindow;
+  public readonly id: string = uuid();
   private readonly ipcManager: IpcManager;
 
   constructor(

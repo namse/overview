@@ -2,11 +2,19 @@ frames:
   - id: 1
     type: Pdf
     src: https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf
+  - id: 2
+    type: ExternalWindow
+    processFileLocation: C:\\Users\\user\\Documents\\programming\\how-fast-you-are\\server\\how-fast-you-are-win32-x64\\how-fast-you-are.exe
 scenes:
   - sceneName: main
     framePositionAndSizes:
-    - id: 1
-      x: 0
-      y: 0
-      width: 960
-      height: 540
+      - id: 1
+        x: 0
+        y: 0
+        width: 960
+        height: 540
+      - id: 2
+        x: 300
+        y: 300
+        width: 300
+        height: 300
