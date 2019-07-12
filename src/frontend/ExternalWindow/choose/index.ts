@@ -8,6 +8,8 @@ declare const id: string;
 
 console.log(id);
 
+document.body.style.overflow = 'auto';
+
 const ipcManager: IpcManager = new IpcManager({
   on(onMessage: OnMessage) {
     ipcRenderer.on(id, (event: Event, channel: string, ...args: any[]) => {

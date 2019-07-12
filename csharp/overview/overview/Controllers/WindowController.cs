@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.JSInterop;
 
 namespace overview.Controllers
 {
@@ -18,19 +19,19 @@ namespace overview.Controllers
     {
         internal static bool IsAltTabWindow(IntPtr windowHandle)
         {
-            if (!IsWindowVisible(windowHandle))
+            if (!WindowsFunctions.IsWindowVisible(windowHandle))
                 return false;
 
             const int GA_ROOTOWNER = 3;
-            var hwndTry = GetAncestor(windowHandle, GA_ROOTOWNER);
+            var hwndTry = WindowsFunctions.GetAncestor(windowHandle, GA_ROOTOWNER);
 
             var hwndWalk = IntPtr.Zero;
 
             while (hwndTry != hwndWalk)
             {
                 hwndWalk = hwndTry;
-                hwndTry = GetLastActivePopup(hwndWalk);
-                if (IsWindowVisible(hwndTry))
+                hwndTry = WindowsFunctions.GetLastActivePopup(hwndWalk);
+                if (WindowsFunctions.IsWindowVisible(hwndTry))
                     break;
             }
 
@@ -38,9 +39,9 @@ namespace overview.Controllers
                 return false;
 
             // the following removes some task tray programs and "Program Manager"
-            TITLEBARINFO titleBarInfo = new TITLEBARINFO();
+            var titleBarInfo = new WindowsFunctions.TITLEBARINFO();
             titleBarInfo.cbSize = Marshal.SizeOf(titleBarInfo);
-            GetTitleBarInfo(windowHandle, ref titleBarInfo);
+            WindowsFunctions.GetTitleBarInfo(windowHandle, ref titleBarInfo);
 
             const int STATE_SYSTEM_INVISIBLE = 0x00008000;
 
@@ -52,13 +53,13 @@ namespace overview.Controllers
             // task bar.
             const int GWL_EXSTYLE = -20;
             const long WS_EX_TOOLWINDOW = 0x00000080L;
-            if ((GetWindowLong(windowHandle, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) != 0)
+            if ((WindowsFunctions.GetWindowLong(windowHandle, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) != 0)
             {
                 return false;
             }
 
-            DwmGetWindowAttribute(windowHandle,
-                DWMWINDOWATTRIBUTE.Cloaked,
+            WindowsFunctions.DwmGetWindowAttribute(windowHandle,
+                WindowsFunctions.DWMWINDOWATTRIBUTE.Cloaked,
                 out var isCloaked,
                 Marshal.SizeOf(typeof(bool)));
 
@@ -82,7 +83,7 @@ namespace overview.Controllers
         {
             var windowInfos = new List<WindowInfo>();
 
-            EnumWindows(((windowHandle, param) =>
+            WindowsFunctions.EnumWindows(((windowHandle, param) =>
             {
                 if (!IsAltTabWindow(windowHandle))
                 {
@@ -90,14 +91,14 @@ namespace overview.Controllers
                 }
 
                 var stringBuilder = new StringBuilder(1024);
-                GetWindowText(windowHandle, stringBuilder, stringBuilder.MaxCapacity);
+                WindowsFunctions.GetWindowText(windowHandle, stringBuilder, stringBuilder.MaxCapacity);
 
                 if (stringBuilder.Length == 0)
                 {
                     return true;
                 }
 
-                GetWindowThreadProcessId(windowHandle, out var processId);
+                WindowsFunctions.GetWindowThreadProcessId(windowHandle, out var processId);
                 var process = Process.GetProcessById((int)processId);
 
                 try
@@ -123,7 +124,7 @@ namespace overview.Controllers
 
         public static Bitmap GetScreenShot(IntPtr windowHandle)
         {
-            GetWindowRect(new HandleRef(null, windowHandle), out var rc);
+            WindowsFunctions.GetWindowRect(new HandleRef(null, windowHandle), out var rc);
 
             var bmp = new Bitmap(rc.Right - rc.Left, rc.Bottom - rc.Top, PixelFormat.Format32bppArgb);
             var gfxBmp = Graphics.FromImage(bmp);
@@ -137,7 +138,7 @@ namespace overview.Controllers
                 return null;
             }
 
-            var succeeded = PrintWindow(windowHandle, hdcBitmap, 0x02); /// flag for hardware acceleration window.
+            var succeeded = WindowsFunctions.PrintWindow(windowHandle, hdcBitmap, 0x02); /// flag for hardware acceleration window.
 
             gfxBmp.ReleaseHdc(hdcBitmap);
 
@@ -146,8 +147,8 @@ namespace overview.Controllers
                 gfxBmp.FillRectangle(new SolidBrush(Color.Gray), new Rectangle(Point.Empty, bmp.Size));
             }
 
-            var hRgn = CreateRectRgn(0, 0, 0, 0);
-            GetWindowRgn(windowHandle, hRgn);
+            var hRgn = WindowsFunctions.CreateRectRgn(0, 0, 0, 0);
+            WindowsFunctions.GetWindowRgn(windowHandle, hRgn);
 
             var region = Region.FromHrgn(hRgn); //err here once
             if (!region.IsEmpty(gfxBmp))
@@ -185,14 +186,14 @@ namespace overview.Controllers
         }
 
         [HttpPost("moveWindow")]
-        public ActionResult<bool> HandleMoveWindow(MoveWindowRequestBody body)
+        public bool HandleMoveWindow(MoveWindowRequestBody body)
         {
             Console.WriteLine(body.WindowHandle);
             Console.WriteLine(body.X);
             Console.WriteLine(body.Y);
             Console.WriteLine(body.Width);
             Console.WriteLine(body.Height);
-            return MoveWindow(
+            return WindowsFunctions.MoveWindow(
                 new IntPtr(body.WindowHandle),
                 body.X,
                 body.Y,
@@ -201,5 +202,38 @@ namespace overview.Controllers
                 false);
         }
 
+        [HttpPost("setWindowAlwaysOnTop")]
+        public int SetWindowAlwaysOnTop(int windowHandle)
+        {
+            Console.WriteLine(windowHandle);
+            var isSuccessful = WindowsFunctions.SetWindowPos(
+                new IntPtr(windowHandle),
+                (IntPtr) WindowsFunctions.SpecialWindowHandles.HWND_TOPMOST,
+                0,
+                0,
+                0,
+                0,
+                WindowsFunctions.SetWindowPosFlags.SWP_NOMOVE | WindowsFunctions.SetWindowPosFlags.SWP_NOSIZE
+            );
+
+            return !isSuccessful ? Marshal.GetLastWin32Error() : 0;
+        }
+
+        [HttpPost("stopWindowAlwaysOnTop")]
+        public int StopWindowAlwaysOnTop(int windowHandle)
+        {
+            Console.WriteLine(windowHandle);
+            var isSuccessful = WindowsFunctions.SetWindowPos(
+                new IntPtr(windowHandle),
+                (IntPtr)WindowsFunctions.SpecialWindowHandles.HWND_TOP,
+                0,
+                0,
+                0,
+                0,
+                WindowsFunctions.SetWindowPosFlags.SWP_NOMOVE | WindowsFunctions.SetWindowPosFlags.SWP_NOSIZE
+            );
+
+            return !isSuccessful ? Marshal.GetLastWin32Error() : 0;
+        }
     }
 }

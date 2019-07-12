@@ -4,7 +4,7 @@ frames:
     src: https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf
   - id: 2
     type: ExternalWindow
-    processFileLocation: C:\\Users\\user\\Documents\\programming\\how-fast-you-are\\server\\how-fast-you-are-win32-x64\\how-fast-you-are.exe
+    processFileLocation: C:\\Program Files (x86)\\Git\\usr\\bin\\mintty.exe
 scenes:
   - sceneName: main
     framePositionAndSizes:

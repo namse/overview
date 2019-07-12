@@ -26,9 +26,12 @@ export default class ExternalWindow implements IWindow {
 
   async initialize(): Promise<void> {
     const windowInfos = await getWindowInfos();
-
     const sameProcessFileLocationWindowInfos = windowInfos.filter(windowInfo =>
-      windowInfo.processFileLocation === this.frameOptions.externalWindowFrameInfo.processFileLocation);
+      path.resolve(windowInfo.processFileLocation) === path.resolve(this.frameOptions.externalWindowFrameInfo.processFileLocation));
+
+    windowInfos.forEach(windowInfo => {
+      console.log(path.resolve(windowInfo.processFileLocation));
+    });
 
     if (sameProcessFileLocationWindowInfos.length === 1) {
       this.windowHandle = sameProcessFileLocationWindowInfos[0].windowHandle;
@@ -36,18 +39,13 @@ export default class ExternalWindow implements IWindow {
       this.windowHandle = await this.chooseExternalWindow();
     }
 
-    console.log('before moveWindow');
-
     await this.moveWindow();
-
-    console.log('after moveWindow');
-
-    console.log(this.windowHandle);
+    await this.setWindowAlwaysOnTop();
   }
 
   chooseExternalWindow(): Promise<number> {
     return new Promise(async (resolve, reject) => {
-      const browserWindow = new BrowserWindow({
+      let browserWindow = new BrowserWindow({
         x: 0,
         y: 0,
         width: 1920,
@@ -71,27 +69,33 @@ export default class ExternalWindow implements IWindow {
 
       ipcManager.startIpcMessageListening();
 
-      const url = `file://${path.join(__dirname, '../frontend/ExternalWindow/choose/index.html')}?id=${this.id}`;
+      const url = `file://${path.join(__dirname, '../frontend/index.html')}?id=${this.id}&src=./ExternalWindow/choose/index.js`;
 
       browserWindow.loadURL(url)
 
       browserWindow.webContents.openDevTools();
 
+      let isResolved = false;
+
       browserWindow.on('closed', () => {
-        reject('browser closed');
+        console.log('browser closed');
+        browserWindow = null;
+        if (!isResolved) {
+          console.log('browser closed before resolved');
+          reject('browser closed before resolved');
+        }
       });
 
       const [windowHandle] = await ipcManager.waitUntilMessage('onChooseWindowHandle');
-      console.log(windowHandle);
-      console.log('before resolve');
+
+      isResolved = true;
       resolve(windowHandle);
-      console.log('after resolve');
+
       browserWindow.close();
     });
   }
 
   async moveWindow(): Promise<void> {
-
     const body: MoveWindowRequestBody = {
       windowHandle: this.windowHandle,
       x: this.frameOptions.x,
@@ -99,7 +103,6 @@ export default class ExternalWindow implements IWindow {
       width: this.frameOptions.width,
       height: this.frameOptions.height,
     };
-
     const response = await fetch(`${serverUrl}api/window/moveWindow`, {
       method: 'POST',
       headers: {
@@ -108,6 +111,31 @@ export default class ExternalWindow implements IWindow {
       body: JSON.stringify(body),
     });
 
-    console.warn(await response.json());
+    const isScucessful = await response.json();
+    if (!isScucessful) {
+      console.log(`fail to move window(${this.windowHandle})`);
+    }
+  }
+
+  async setWindowAlwaysOnTop(): Promise<void> {
+    const response = await fetch(`${serverUrl}api/window/setWindowAlwaysOnTop?windowHandle=${this.windowHandle}`, {
+      method: 'POST',
+    });
+
+    const errorCode = await response.json();
+    if (errorCode != 0) {
+      console.log(`fail to set window(${this.windowHandle})  always on top. errorCode: ${errorCode}`);
+    }
+  }
+
+  public async stopWindowAlwaysOnTop(): Promise<void> {
+    const response = await fetch(`${serverUrl}api/window/stopWindowAlwaysOnTop?windowHandle=${this.windowHandle}`, {
+      method: 'POST',
+    });
+
+    const errorCode = await response.json();
+    if (errorCode != 0) {
+      console.log(`fail to stop window(${this.windowHandle})  always on top. errorCode: ${errorCode}`);
+    }
   }
 }

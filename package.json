@@ -6,7 +6,7 @@
     "build": "tsc && node buildScripts/copyAllResources.js",
     "watch": "concurrently --kill-others \"tsc -w\" \"node buildScripts/watchResources.js\"",
     "lint": "tslint -c tslint.json -p tsconfig.json",
-    "start": "npm run build && electron ./dist/backend/main.js"
+    "start": "electron ./dist/backend/main.js"
   },
   "repository": "https://github.com/skatpgusskat/overview.git",
   "keywords": [

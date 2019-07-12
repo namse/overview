@@ -15,12 +15,14 @@
 
   <script>
     window.exports = {}; // electron doesn't provide exports as default, but tsc generate code `exports.__esModule = true;`.
-    {
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('id');
-      window.id = id;
-    }
-  </script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    window.id = id;
 
-  <script src="./renderer.js"></script>
+    const script = document.createElement('script');
+    const src = urlParams.get('src');
+    script.src = src;
+
+    document.head.appendChild(script);
+  </script>
 </html>
