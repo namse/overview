@@ -2,10 +2,12 @@ import 'module-alias/register';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
-import { app } from "electron";
-import FrameWindow from "./FrameWindow";
+import { app, globalShortcut } from 'electron';
+import FrameWindow from './FrameWindow';
 import { PdfFrameOptions, FrameType, FrameInfo, ExternalWindowFrameInfo, ExternalWindowFrameOptions } from '@src/common/FrameOptions';
 import ExternalWindow from './ExternalWindow';
+import { IWindow } from './IWindow';
+
 
 const appSettingsPath = path.join(__dirname, './appSettings.yml');
 
@@ -15,7 +17,7 @@ interface PdfFrameInfo extends FrameInfo {
   src: string;
 }
 
-interface FramePositionAndSize {
+export interface FramePositionAndSize {
   id: string;
   x: number;
   y: number;
@@ -33,59 +35,99 @@ type AppSettings = {
 
 const appSettings = yaml.parse(appSettingsString) as AppSettings;
 
-let externalWindows: ExternalWindow[];
 
-app.on("ready", async () => {
+const allWindowsMap: {[id: string]: IWindow} = {};
+
+function createFrameWindow(framePositionAndSize: FramePositionAndSize): IWindow {
+  const frameInfo = appSettings.frames.find(frame => frame.id === framePositionAndSize.id);
+
+  let window: IWindow;
+  switch (frameInfo.type) {
+    case FrameType.Pdf: {
+      const pdfFrameInfo = frameInfo as PdfFrameInfo;
+      const frameOptions: PdfFrameOptions = {
+        frameType: FrameType.Pdf,
+        ...framePositionAndSize,
+        ...pdfFrameInfo,
+      };
+      window = new FrameWindow(frameOptions);
+    } break;
+    case FrameType.ExternalWindow: {
+      const externalWindowFrameInfo = frameInfo as ExternalWindowFrameInfo;
+      console.log(externalWindowFrameInfo);
+      const frameOptions: ExternalWindowFrameOptions = {
+        frameType: FrameType.ExternalWindow,
+        ...framePositionAndSize,
+        externalWindowFrameInfo,
+      };
+      window = new ExternalWindow(frameOptions);
+    } break;
+  }
+
+  allWindowsMap[framePositionAndSize.id] = window;
+  return window;
+}
+
+async function initializedWindows(windows: IWindow[]): Promise<void> {
+  const externalWindows = windows.filter((window): window is ExternalWindow => window instanceof ExternalWindow);
+  const nonExternalWindows = windows.filter((window): window is FrameWindow => !(window instanceof ExternalWindow));
+
+  await Promise.all(externalWindows.map(async externalWindow => {
+    await externalWindow.initialize();
+    console.log(`externalWindow(${externalWindow.id}) initliazed`);
+  }));
+
+  await Promise.all(nonExternalWindows.map(async nonExternalWindow => {
+    await nonExternalWindow.initialize();
+    console.log(`nonExternalWindow(${nonExternalWindow.id}) initliazed`);
+  }));
+}
+
+async function changeScene(sceneName: string) {
   try {
-    const mainSceneInfo = appSettings.scenes.find(sceneInfo => sceneInfo.sceneName === 'main');
+    const sceneInfo = appSettings.scenes.find(sceneInfo => sceneInfo.sceneName === sceneName);
 
-    if (!mainSceneInfo) {
-      throw new Error(`cannot find 'main' scene in appSettings.yml`);
+    if (!sceneInfo) {
+      throw new Error(`cannot find '${sceneName}' scene in appSettings.yml`);
     }
 
-    const frameWindows = await Promise.all(mainSceneInfo.framePositionAndSizes.map(async (framePositionAndSize) => {
-      const frameInfo = appSettings.frames.find(frame => frame.id === framePositionAndSize.id);
-
-      switch (frameInfo.type) {
-        case FrameType.Pdf: {
-          const pdfFrameInfo = frameInfo as PdfFrameInfo;
-          const frameOptions: PdfFrameOptions = {
-            frameType: FrameType.Pdf,
-            ...framePositionAndSize,
-            ...pdfFrameInfo,
-          };
-          const frameWindow = new FrameWindow(frameOptions);
-          return frameWindow;
-        }
-        case FrameType.ExternalWindow: {
-          const externalWindowFrameInfo = frameInfo as ExternalWindowFrameInfo;
-          const frameOptions: ExternalWindowFrameOptions = {
-            frameType: FrameType.ExternalWindow,
-            ...framePositionAndSize,
-            externalWindowFrameInfo,
-          };
-          const externalWindow = new ExternalWindow(frameOptions);
-          return externalWindow;
-        }
+    const windows = sceneInfo.framePositionAndSizes.map(framePositionAndSize => {
+      let window = allWindowsMap[framePositionAndSize.id];
+      if (!window) {
+        window = createFrameWindow(framePositionAndSize);
       }
-    }));
+      return window;
+    });
 
-    externalWindows = frameWindows.filter((frameWindow): frameWindow is ExternalWindow => frameWindow instanceof ExternalWindow);
-    const nonExternalWindows = frameWindows.filter((frameWindow): frameWindow is FrameWindow => !(frameWindow instanceof ExternalWindow));
+    const notInitializedWindows = windows.filter(window => !window.initialized);
 
-    await Promise.all(externalWindows.map(async externalWindow => {
-      await externalWindow.initialize();
-      console.log(`externalWindow(${externalWindow.id}) initliazed`);
-    }));
+    if (notInitializedWindows.length) {
+      await initializedWindows(notInitializedWindows);
+    }
 
-    await Promise.all(nonExternalWindows.map(async nonExternalWindow => {
-      await nonExternalWindow.initialize();
-      console.log(`nonExternalWindow(${nonExternalWindow.id}) initliazed`);
+    await Promise.all(sceneInfo.framePositionAndSizes.map(async (framePositionAndSize) => {
+      const window = allWindowsMap[framePositionAndSize.id];
+      await window.updatePositionAndSize(framePositionAndSize);
     }));
     console.log('done');
   } catch (err) {
     console.error(err);
   }
+}
+
+app.on('ready', async () => {
+  for (let i = 0; i < 9; i += 1) {
+    globalShortcut.register(`Ctrl+Alt+Shift+${i + 1}`, () => {
+      const scene = appSettings.scenes[i];
+      if (!scene) {
+        return;
+      }
+      console.log(`changeScene(${scene.sceneName})`);
+      changeScene(scene.sceneName);
+    });
+  }
+
+  await changeScene('main');
 });
 
 async function exitHandler(options: { cleanup?: boolean, exit?: boolean }, exitCode: number) {
@@ -96,6 +138,7 @@ async function exitHandler(options: { cleanup?: boolean, exit?: boolean }, exitC
     console.log(exitCode);
   }
 
+  const externalWindows = Object.values(allWindowsMap).filter((window): window is ExternalWindow => window instanceof ExternalWindow);
   if (externalWindows) {
     await Promise.all(externalWindows.map(externalWindow => externalWindow.stopWindowAlwaysOnTop()));
   }
@@ -114,7 +157,7 @@ process.on('SIGTERM', function () {
 //catches ctrl+c event
 process.on('SIGINT', exitHandler.bind(null, { exit: true }));
 
-// catches "kill pid" (for example: nodemon restart)
+// catches 'kill pid' (for example: nodemon restart)
 process.on('SIGUSR1', exitHandler.bind(null, { exit: true }));
 process.on('SIGUSR2', exitHandler.bind(null, { exit: true }));
 

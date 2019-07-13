@@ -5,6 +5,7 @@ export enum FrameType {
 
 export abstract class FrameOptions {
   abstract frameType: FrameType;
+  id: string;
   x: number;
   y: number;
   width: number;

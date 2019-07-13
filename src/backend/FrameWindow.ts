@@ -5,6 +5,7 @@ import IpcManager, { OnMessage } from '@src/common/IpcManager';
 import { FrameOptions } from '@src/common/FrameOptions';
 import { IWindow } from './IWindow';
 import { app } from "electron";
+import { FramePositionAndSize } from './main';
 
 export let hiddenBrowserWindow: BrowserWindow;
 
@@ -23,6 +24,7 @@ app.on('ready', () => {
 })
 
 export default class FrameWindow implements IWindow {
+  public initialized: boolean = false;
   public browserWindow: BrowserWindow;
   public readonly id: string = uuid();
   private ipcManager: IpcManager;
@@ -81,5 +83,18 @@ export default class FrameWindow implements IWindow {
     });
 
     // Initialize Browser Window as Frame Window
+
+    this.initialized = true;
+  }
+  async updatePositionAndSize(framePositionAndSize: FramePositionAndSize): Promise<void> {
+    const { x, y, width, height } = framePositionAndSize;
+
+    this.frameOptions.x = x;
+    this.frameOptions.y = y;
+    this.frameOptions.width = width;
+    this.frameOptions.height = height;
+
+    this.browserWindow.setPosition(x, y);
+    this.browserWindow.setSize(width, height);
   }
 }

@@ -1,12 +1,12 @@
 import { IWindow } from "./IWindow";
 import { ExternalWindowFrameOptions } from "@src/common/FrameOptions";
 import getWindowInfos from "../common/ExternalWindow/getWindowInfos";
-import * as uuid from 'uuid/v4';
 import { BrowserWindow } from "electron";
 import IpcManager, { OnMessage } from "@src/common/IpcManager";
 import * as path from 'path';
 import fetch from 'node-fetch';
 import { serverUrl } from "@src/common/ExternalWindow/settings";
+import { FramePositionAndSize } from "./main";
 
 type MoveWindowRequestBody = {
   windowHandle: number;
@@ -17,8 +17,12 @@ type MoveWindowRequestBody = {
 };
 
 export default class ExternalWindow implements IWindow {
+  public initialized: boolean = false;
   private windowHandle: number | undefined;
-  public readonly id: string = uuid();
+
+  public get id(): string {
+    return this.frameOptions.id;
+  };
 
   constructor(private frameOptions: ExternalWindowFrameOptions) {
 
@@ -26,15 +30,11 @@ export default class ExternalWindow implements IWindow {
 
   async initialize(): Promise<void> {
     const windowInfos = await getWindowInfos();
-    const sameProcessFileLocationWindowInfos = windowInfos.filter(windowInfo =>
-      path.resolve(windowInfo.processFileLocation) === path.resolve(this.frameOptions.externalWindowFrameInfo.processFileLocation));
 
-    windowInfos.forEach(windowInfo => {
-      console.log(path.resolve(windowInfo.processFileLocation));
-    });
-
-    console.log(path.resolve(this.frameOptions.externalWindowFrameInfo.processFileLocation));
-    console.log(sameProcessFileLocationWindowInfos.length);
+    const sameProcessFileLocationWindowInfos = windowInfos
+      .filter(windowInfo => windowInfo.processFileLocation)
+      .filter(windowInfo =>
+        path.resolve(windowInfo.processFileLocation) === path.resolve(this.frameOptions.externalWindowFrameInfo.processFileLocation));
 
     if (sameProcessFileLocationWindowInfos.length === 1) {
       this.windowHandle = sameProcessFileLocationWindowInfos[0].windowHandle;
@@ -42,9 +42,7 @@ export default class ExternalWindow implements IWindow {
       this.windowHandle = await this.chooseExternalWindow();
     }
 
-    await this.showWindow();
-    await this.moveWindow();
-    await this.setWindowAlwaysOnTop();
+    this.initialized = true;
   }
 
   chooseExternalWindow(): Promise<number> {
@@ -152,5 +150,16 @@ export default class ExternalWindow implements IWindow {
     if (errorCode != 0) {
       console.log(`fail to show window(${this.windowHandle}). errorCode: ${errorCode}`);
     }
+  }
+
+  async updatePositionAndSize(framePositionAndSize: FramePositionAndSize): Promise<void> {
+    this.frameOptions.x = framePositionAndSize.x;
+    this.frameOptions.y = framePositionAndSize.y;
+    this.frameOptions.width = framePositionAndSize.width;
+    this.frameOptions.height = framePositionAndSize.height;
+
+    await this.showWindow();
+    await this.moveWindow();
+    await this.setWindowAlwaysOnTop();
   }
 }
