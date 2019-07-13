@@ -6,7 +6,9 @@
     "build": "tsc && node buildScripts/copyAllResources.js",
     "watch": "concurrently --kill-others \"tsc -w\" \"node buildScripts/watchResources.js\"",
     "lint": "tslint -c tslint.json -p tsconfig.json",
-    "start": "electron ./dist/backend/main.js"
+    "start": "electron ./dist/backend/main.js",
+    "run-csharp-server": "dotnet run -p csharp/overview/overview",
+    "watch-csharp-server": "dotnet watch -p csharp/overview/overview run"
   },
   "repository": "https://github.com/skatpgusskat/overview.git",
   "keywords": [
