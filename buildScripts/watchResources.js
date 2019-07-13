@@ -21,8 +21,8 @@ function requestMoveFile(filename) {
 function watchResources() {
   const filePath = path.join(__dirname, '../src');
 
-  fs.watch(filePath, (event, filename) => {
-    requestMoveFile(filename);
+  fs.watch(filePath, { recursive: true }, (event, filename) => {
+    requestMoveFile(path.resolve(filePath, filename));
   });
 }
 
