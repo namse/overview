@@ -33,12 +33,16 @@ export default class ExternalWindow implements IWindow {
       console.log(path.resolve(windowInfo.processFileLocation));
     });
 
+    console.log(path.resolve(this.frameOptions.externalWindowFrameInfo.processFileLocation));
+    console.log(sameProcessFileLocationWindowInfos.length);
+
     if (sameProcessFileLocationWindowInfos.length === 1) {
       this.windowHandle = sameProcessFileLocationWindowInfos[0].windowHandle;
     } else {
       this.windowHandle = await this.chooseExternalWindow();
     }
 
+    await this.showWindow();
     await this.moveWindow();
     await this.setWindowAlwaysOnTop();
   }
@@ -124,7 +128,7 @@ export default class ExternalWindow implements IWindow {
 
     const errorCode = await response.json();
     if (errorCode != 0) {
-      console.log(`fail to set window(${this.windowHandle})  always on top. errorCode: ${errorCode}`);
+      console.log(`fail to set window(${this.windowHandle}) always on top. errorCode: ${errorCode}`);
     }
   }
 
@@ -135,7 +139,18 @@ export default class ExternalWindow implements IWindow {
 
     const errorCode = await response.json();
     if (errorCode != 0) {
-      console.log(`fail to stop window(${this.windowHandle})  always on top. errorCode: ${errorCode}`);
+      console.log(`fail to stop window(${this.windowHandle}) always on top. errorCode: ${errorCode}`);
+    }
+  }
+
+  public async showWindow(): Promise<void> {
+    const response = await fetch(`${serverUrl}api/window/showWindow?windowHandle=${this.windowHandle}`, {
+      method: 'POST',
+    });
+
+    const errorCode = await response.json();
+    if (errorCode != 0) {
+      console.log(`fail to show window(${this.windowHandle}). errorCode: ${errorCode}`);
     }
   }
 }

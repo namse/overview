@@ -27,9 +27,7 @@ ipcManager.send('onOpenWindow');
 async function main() {
   const windowInfos = await getWindowInfos();
 
-
-  http://localhost:34343/api/window/windowThumbnail?windowHandle=133316
-
+  console.log(windowInfos);
 
   windowInfos.forEach(windowInfo => {
     /*

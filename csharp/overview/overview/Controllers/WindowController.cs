@@ -235,5 +235,18 @@ namespace overview.Controllers
 
             return !isSuccessful ? Marshal.GetLastWin32Error() : 0;
         }
+
+        [HttpPost("showWindow")]
+        public int ShowWindow(int windowHandle)
+        {
+            
+            Console.WriteLine(windowHandle);
+            var isSuccessful = WindowsFunctions.ShowWindow(
+                new IntPtr(windowHandle),
+                WindowsFunctions.ShowWindowCommand.SW_RESTORE
+            );
+
+            return !isSuccessful ? Marshal.GetLastWin32Error() : 0;
+        }
     }
 }
