@@ -35,7 +35,7 @@
   "dependencies": {
     "electron": "^5.0.6",
     "module-alias": "^2.2.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "uuid": "^3.3.2",
     "yaml": "^1.6.0"
   }
