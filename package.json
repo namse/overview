@@ -33,7 +33,7 @@
     "typescript": "^3.5.2"
   },
   "dependencies": {
-    "electron": "^5.0.6",
+    "electron": "^11.5.0",
     "module-alias": "^2.2.0",
     "node-fetch": "^2.6.0",
     "uuid": "^3.3.2",
